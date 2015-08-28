@@ -2,6 +2,7 @@
 # David Trethewey
 # 28-08-2015
 # making Universal Jobmatch easier to read
+
 from bs4 import BeautifulSoup
 from urllib import urlopen
 # Import the python Argument parser
@@ -227,7 +228,7 @@ if __name__ == '__main__':
                         help="Specify search query keyword (default is *).",
                         default="*")
     parser.add_argument("-n", "--npages", type=int,
-                        help="Specify number of pages (default is 20).",
+                        help="Specify number of pages (default is 20). It will stop anyway after a full page of duplicates.",
                         default=20)
     parser.add_argument("-d", "--days", type=int,
                         help="Specify number of days to search back (default is 1 - i.e. posted today or yesterday).",
