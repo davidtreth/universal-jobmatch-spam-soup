@@ -5,8 +5,8 @@ Written by David Trethewey
 ----------------------------
 
 This is a command-line Python script to read the UK Department
-of Work and Pensions <a href="https://jobsearch.direct.gov.uk">Universal Jobmatch</a> website, and convert
-the information from a series of pages one has to click through,
+of Work and Pensions Universal Jobmatch website https://jobsearch.direct.gov.uk,
+and convert the information from a series of pages one has to click through,
 to a single HTML table.
 
 Specify the desired location, skills/keywords query, days before present,
