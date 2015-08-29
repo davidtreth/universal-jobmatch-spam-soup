@@ -217,7 +217,7 @@ def getFromUJ(q="*",t="*",loc="tr1",days=1,npages=20,radiusM=20,mode="html"):
         if nNewJobs == -1:
             # if there are no jobs, print a message
             if mode == "html":
-                print("<tr><td></td><td>No jobs! The economic recovery is a dead parrot!</td><td></td><td></td></tr>")
+                print("<tr><td></td><td>No jobs! The economic recovery is an ex-parrot! It has ceased to be!</td><td></td><td></td></tr>")
             else:
                 print("No jobs! The economic recovery is a dead parrot!")
             break
