@@ -192,17 +192,28 @@ def printHTMLIntro():
     print("</head>")
     print("<body>")
     print("<table>")
-    print("<tr><th>Date</th><th>Job title</th><th>Advertiser</th><th>Location</th></tr>")
+    # title row
+    print("<tr class='titlerow'><th>Date</th><th>Job title</th><th>Advertiser</th><th>Location</th></tr>")
+
+def printClosingRows(mode,nJobs):
+    if mode == "html":        
+        # number of jobs
+        if nJobs > 0:
+            print("<tr class='totalNjobs'><td></td><td>Total number of jobs found: {n}</td><td></td><td></td>".format(n=nJobs))
+        # closing tagline
+        print("<tr class='closingrow'><td></td><td>Created using <a href='https://bitbucket.org/davidtreth/universal-jobmatch-spam-soup'>Universal Jobmatch Spam Soup</a>.</td><td></td><td></td></tr>")
+        printHTMLEnd()
+    else:
+        if nJobs > 0:
+            print("\t\tTotal number of jobs found: {n}\t\t".format(n=nJobs))
+        print("Created using Universal Jobmatch Spam Soup\thttps://bitbucket.org/davidtreth/universal-jobmatch-spam-soup")
 
 def printHTMLEnd():
     """ print closing HTML boilerplate """
-    # closing tagline
-    print("<tr><td></td><td><em>Created using <a href='https://bitbucket.org/davidtreth/universal-jobmatch-spam-soup'>Universal Jobmatch Spam Soup</a>.</em></td><td></td><td></td></tr>")
     print("</table>")
     print("</body>")
     print("</html>")
 
-    
 def getFromUJ(q="*",t="*",loc="tr1",days=1,npages=20,radiusM=20,mode="html"):
     """ This function queries Universal Jobmatch and prints it as a HTML table to standard output 
 
@@ -210,19 +221,30 @@ def getFromUJ(q="*",t="*",loc="tr1",days=1,npages=20,radiusM=20,mode="html"):
     usage: python <optional arguments> UJ.py > file.html
     type "python --help UJ.py" for details of the optional arguments """
 
+    # counter variable for total number of jobs found
+    totalNjobs = 0
+
     if mode == "html":
         printHTMLIntro()
-    
+        # subtitle row
+        print("<tr class='subt'><th>Last {d} days</th><th>Query: job title = '{t}', keyword = '{q}'</th><th></th><th>up to {r} miles from {l}</th></tr>".format(d=days,t=t,q=q,r=radiusM,l=loc))
+    else:
+        print("Date\tURL\tJob title\tAdvertiser\Location")
+        print("Last {d} days\t\tQuery: job title = '{t}', keyword = '{q}'\t\tup to {r} miles from {l}".format(d=days,t=t,q=q,r=radiusM,l=loc))
     for page in range(npages):
-        #print("Page {p}".format(p=page))
+        # print("Page {p}".format(p=page))
         pagerowlist, nNewJobs = readPage(page,q,t,loc,days,radiusM)
         if nNewJobs == -1:
             # if there are no jobs, print a message
             if mode == "html":
-                print("<tr><td></td><td>No jobs! The economic recovery is an ex-parrot! It has ceased to be!</td><td></td><td></td></tr>")
+                print("<tr class='deadparrot'><td></td><td>No jobs! The economic recovery is an ex-parrot! It has ceased to be!</td><td></td><td></td></tr>")
             else:
-                print("No jobs! The economic recovery is a dead parrot!")
+                print("No jobs! The economic recovery is an ex-parrot! It has ceased to be!")
             break
+
+        # add to counter variable to count total number
+        totalNjobs += nNewJobs
+
         if nNewJobs == 0:
             # if they are only duplicates, stop
             break
@@ -231,9 +253,8 @@ def getFromUJ(q="*",t="*",loc="tr1",days=1,npages=20,radiusM=20,mode="html"):
                 job.printTableRow()
             else:
                 job.printHTMLTableRow()            
-    if mode == "html":
-        printHTMLEnd()
-    
+    printClosingRows(mode,totalNjobs)
+
 if __name__ == '__main__':
     """ Create the command line options with ArgumentParser. """
     parser = argparse.ArgumentParser()

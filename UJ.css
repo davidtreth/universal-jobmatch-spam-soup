@@ -1,19 +1,73 @@
-table {width:100%;}
-tr {
-margin:auto;
-clear:both;
-width:100%;
-padding:2px;
+table {
+    width:100%;
+    border: 1px solid black;
+    border-collapse:collapse;
 }
-tr:nth-child(odd) {
-    background-color: Gainsboro;}
-td, th	{margin-right:20px;}
-td:nth-child(2), th:nth-child(2) {width:50%;}
-td:nth-child(3), th:nth-child(3) {width:20%;}
-td:nth-child(4), th:nth-child(4) {
-		     margin-right:0;
-		     float:right;}
+tr {
+    margin:auto;
+    clear:both;
+    width:100%;
+    border: none;
+}
+tr:nth-child(even) {
+    background-color: Gainsboro;
+}
+td, th {
+    margin-right:20px;
+    padding: 4px;
+}
+td:nth-child(1), th:nth-child(1) {
+    text-align:center;
+    border-right:0px solid DarkSlateGray;
+}
+td:nth-child(2), th:nth-child(2) {
+    width:50%;
+    border-right:0px solid DarkSlateGray;
+}
+td:nth-child(3), th:nth-child(3) {
+    width:20%;
+    border-right:0px solid DarkSlateGray;
+}
+td:nth-child(4) {
+    margin-right:0;
+    text-align:right;
+}
+tr.titlerow {
+    background-color: Gainsboro;
+}
+tr.titlerow th {
+    text-align: centre;
+}
+tr.subt {
+    background-color: white; 
+    font-size:0.85em; 
+    color:DarkSlateGray;
+    font-weight:normal;
+    border-bottom:0.5px solid DarkSlateGray;
+}
+tr.subt th {
+    text-align: center;
+    font-weight:normal;
+    color:DarkSlateGray;
+}
+tr.deadparrot { 
+    color: MidnightBlue;
+    background-color:Gold;
+    font-weight:bold;
+    border-bottom: 0.5px solid DarkSlateGray;
+}
+tr.totalNjobs {
+    background-color: Gainsboro;
+    font-weight:bold;
+    border-top:0.5px solid DarkSlateGray;
+}
+tr.closingrow { 
+    background-color: LightSkyBlue;
+    font-style:italic;
+}
 a {
-    text-decoration: none;}
+    text-decoration: none;
+}
 body {
-    font-family: sans-serif;}
+    font-family: sans-serif;
+}
