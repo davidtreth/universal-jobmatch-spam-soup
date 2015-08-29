@@ -153,11 +153,17 @@ def readTable(jobtable):
     of ones that appeared in earlier pages """
     return joblist,nNewJobs
 
-def readPage(page,q="*",loc="tr1",days=1,radiusM=20):
+def readPage(page,q="*",t="*",loc="tr1",days=1,radiusM=20):
     if q=="*":
-        urlUJ = "https://jobsearch.direct.gov.uk/JobSearch/PowerSearch.aspx?pp=25&pg={pg}&where={w}&sort=rv.dt.di&rad={rad}&rad_units=miles&re=134&tm={d}".format(pg=str(page+1),w=str(loc),d=str(days),rad=str(radiusM))    
+        kwordquery = ""
     else:
-        urlUJ = "https://jobsearch.direct.gov.uk/JobSearch/PowerSearch.aspx?pp=25&pg={pg}&q={q}&where={w}&sort=rv.dt.di&rad={rad}&rad_units=miles&re=134&tm={d}".format(pg=str(page+1),w=str(loc),d=str(days),rad=str(radiusM),q=str(q))    
+        kwordquery = "&q={q}".format(q=q)
+    if t=="*":
+        jtitlequery = ""
+    else:
+        jtitlequery = "&tjt={t}".format(t=t)
+
+    urlUJ = "https://jobsearch.direct.gov.uk/JobSearch/PowerSearch.aspx?pp=25&pg={pg}{kw}{jt}&where={w}&sort=rv.dt.di&rad={rad}&rad_units=miles&re=134&tm={d}".format(pg=str(page+1),w=str(loc),d=str(days),rad=str(radiusM),kw=kwordquery,jt=jtitlequery)    
     raw = urlopen(urlUJ).read()
     soup = BeautifulSoup(raw)
     # print(raw)
@@ -167,7 +173,11 @@ def readPage(page,q="*",loc="tr1",days=1,radiusM=20):
     
     # pass nNewJobs up to getFromUJ to determine when to stop
     # after encountering page of duplicates
-    pagerowlist, nNewJobs = readTable(soup.table)
+    if soup.table:
+        # if there are no jobs, there isn't a <table>
+        pagerowlist, nNewJobs = readTable(soup.table)
+    else:
+        pagerowlist, nNewJobs = [], -1
     return pagerowlist, nNewJobs
     
 
@@ -191,7 +201,7 @@ def printHTMLEnd():
     print("</html>")
 
     
-def getFromUJ(q="*",loc="tr1",days=1,npages=20,radiusM=20,mode="html"):
+def getFromUJ(q="*",t="*",loc="tr1",days=1,npages=20,radiusM=20,mode="html"):
     """ This function queries Universal Jobmatch and prints it as a HTML table to standard output 
 
     Redirect the output to an HTML file as follows
@@ -203,7 +213,14 @@ def getFromUJ(q="*",loc="tr1",days=1,npages=20,radiusM=20,mode="html"):
     
     for page in range(npages):
         #print("Page {p}".format(p=page))
-        pagerowlist, nNewJobs = readPage(page,q,loc,days,radiusM)
+        pagerowlist, nNewJobs = readPage(page,q,t,loc,days,radiusM)
+        if nNewJobs == -1:
+            # if there are no jobs, print a message
+            if mode == "html":
+                print("<tr><td></td><td>No jobs! The economic recovery is a dead parrot!</td><td></td><td></td></tr>")
+            else:
+                print("No jobs! The economic recovery is a dead parrot!")
+            break
         if nNewJobs == 0:
             # if they are only duplicates, stop
             break
@@ -225,8 +242,11 @@ if __name__ == '__main__':
                         help="Specify search radius in miles (default is 20).",
                         default=20)
     parser.add_argument("-q", "--query", type=str,
-                        help="Specify search query keyword (default is *).",
+                        help="Specify skills/keyword search query (default is *).",
                         default="*")
+    parser.add_argument("-t", "--jobtitle", type=str,
+                        help="Specify job title search query (default is *).",
+                        default = "*")
     parser.add_argument("-n", "--npages", type=int,
                         help="Specify number of pages (default is 20). It will stop anyway after a full page of duplicates.",
                         default=20)
@@ -239,4 +259,4 @@ if __name__ == '__main__':
     # Call the parser to parse the arguments.
     args = parser.parse_args()
     args.postcode = args.postcode.replace(" ","%20")
-    getFromUJ(q=args.query,loc=args.postcode,days=args.days,npages=args.npages,radiusM=args.radius,mode=args.mode)
+    getFromUJ(q=args.query,t=args.jobtitle,loc=args.postcode,days=args.days,npages=args.npages,radiusM=args.radius,mode=args.mode)
