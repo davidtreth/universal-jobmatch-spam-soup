@@ -196,6 +196,8 @@ def printHTMLIntro():
 
 def printHTMLEnd():
     """ print closing HTML boilerplate """
+    # closing tagline
+    print("<tr><td></td><td><em>Created using <a href='https://bitbucket.org/davidtreth/universal-jobmatch-spam-soup'>Universal Jobmatch Spam Soup</a>.</em></td><td></td><td></td></tr>")
     print("</table>")
     print("</body>")
     print("</html>")
