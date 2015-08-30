@@ -162,8 +162,7 @@ def readPage(page,q="*",t="*",loc="tr1",days=1,radiusM=20):
         jtitlequery = ""
     else:
         jtitlequery = "&tjt={t}".format(t=t)
-
-    urlUJ = "https://jobsearch.direct.gov.uk/JobSearch/PowerSearch.aspx?pp=25&pg={pg}{kw}{jt}&where={w}&sort=rv.dt.di&rad={rad}&rad_units=miles&re=134&tm={d}".format(pg=str(page+1),w=str(loc),d=str(days),rad=str(radiusM),kw=kwordquery,jt=jtitlequery)    
+    urlUJ = "https://jobsearch.direct.gov.uk/JobSearch/PowerSearch.aspx?{jt}&tm={d}{kw}&where={w}&rad={rad}&sort=rv.dt.di&pp=25&rad_units=miles&pg={pg}".format(pg=str(page+1),w=str(loc),d=str(days),rad=str(radiusM),kw=kwordquery,jt=jtitlequery)    
     raw = urlopen(urlUJ).read()
     soup = BeautifulSoup(raw)
     # print(raw)
