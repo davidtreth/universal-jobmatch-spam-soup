@@ -144,12 +144,9 @@ def readRow(r):
         if (td.contents[0] != '\n' or len(td.contents) >1):
             linklist = td.find_all("a")
             # print("linklist={l}".format(l=linklist))
-            # there should be only one <a> in a <td>
-            # which will either be empty or contain the job URL and title
-            # print(linklist)
             if len(linklist)>0:
                 # take account of change of format of universal jobmatch
-                # the first <a> is empty
+                # the first <a> is empty, and the second contains the link
                 i = linklist[1]
                 # i.string is the job title
                 # get the URL by i.get('href')
@@ -181,17 +178,17 @@ def readRow(r):
                     if "lblDate" in i.get('id'):
                         date = i.string
                 except:
-                    pass
+                    date = ''
                 try:
                     if "lblCompany" in i.get('id'):
                         employer = i.string
                 except:
-                    pass
+                    employer = ''
                 try:
                     if "lblArea" in i.get('id'):
                         location = i.string
                 except:
-                    pass
+                    location = ''
                 # NB, the <span> with the "City" in the id is assumed to always be empty
 
         else:
@@ -234,7 +231,7 @@ def readPage(page,q="*",t="*",loc="tr1",days=1,radiusM=20):
         jtitlequery = ""
     else:
         jtitlequery = "&tjt={t}".format(t=t)
-    urlUJ = "https://jobsearch.direct.gov.uk/jobsearch/PowerSearch.aspx?{jt}&tm={d}{kw}&where={w}&rad={rad}&sort=rv.dt.di&pp=25&rad_units=miles&pg={pg}".format(pg=str(page+1),w=str(loc),d=str(days),rad=str(radiusM),kw=kwordquery,jt=jtitlequery)    
+    urlUJ = "https://jobsearch.direct.gov.uk/JobSearch/PowerSearch.aspx?{jt}&tm={d}{kw}&where={w}&rad={rad}&sort=rv.dt.di&pp=25&rad_units=miles&pg={pg}".format(pg=str(page+1),w=str(loc),d=str(days),rad=str(radiusM),kw=kwordquery,jt=jtitlequery)    
     raw = urlopen(urlUJ).read()
     soup = BeautifulSoup(raw,"lxml")
     # print(raw)
