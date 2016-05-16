@@ -1,7 +1,8 @@
 # -*- coding: utf-8 -*-
 # David Trethewey
-# 28-08-2015
+# 16-05-2016
 # making Universal Jobmatch easier to read
+# takes account of some changes in the HTML table from UJ -- May 2016
 
 from bs4 import BeautifulSoup
 from urllib import urlopen
@@ -61,6 +62,8 @@ def readRow(r):
     then another <td> with a <span> containing the employer/advertiser
     then another <td> with 2 <span>s in containing location, though only one usually used
 
+    there have been some changes to the format of Universal Jobmatch, as shown below.
+
     Example:
     <tr>
     <td>
@@ -75,6 +78,60 @@ def readRow(r):
     <span id="MasterPage1_MainContent__ctlResultsFlatTrovix_rptResults__ctl3_lblCity"></span>
     </td>
     </tr>
+
+    new format:
+            <tr class="mobileTableBody">
+               <td>
+                    <div class="mobileTableTdContent">
+                        <div class="mobileAltHeader">
+                            <span id="MasterPage1_MainContent__ctlResultsFlatTrovix_rptResults__ctl1_msgDate2">Date</span>
+                        </div>
+                        <div class="mobileTd">
+                            <a name="26643838"></a>
+                            <span id="MasterPage1_MainContent__ctlResultsFlatTrovix_rptResults__ctl1_lblDate">09/05/2016</span>
+                         </div>
+                    </div>
+
+                    <div class="mobileTableTdContent">
+                        <div class="jobsSavedBy mobileAltHeader">
+                            <span class="access"><span id="MasterPage1_MainContent__ctlResultsFlatTrovix_rptResults__ctl1_MONSMessage2">Jobs Saved by</span></span>
+                        </div>
+                        <div class="mobileTd">
+                            
+                            
+                        </div>
+                    </div>
+
+                    <div class="mobileTableTdContent">
+                        <div class="mobileAltHeader">
+                            <span id="MasterPage1_MainContent__ctlResultsFlatTrovix_rptResults__ctl1_msgJobTitle2">Job title</span>
+                        </div>
+                        <div class="mobileTd">
+                            <a id="MasterPage1_MainContent__ctlResultsFlatTrovix_rptResults__ctl1_lnkTitle" title="" href="http://jobsearch.direct.gov.uk/GetJob.ashx?JobID=26643838&amp;JobTitle=QA%20Software%20Tester&amp;AVSDM=2016-05-10T04%3a20%3a00-05%3a00">QA Software Tester</a>
+                        </div>
+                    </div>
+
+                    <div class="mobileTableTdContent">
+                        <div class="mobileAltHeader">
+                            <span>Company</span>
+                        </div>
+                        <div class="mobileTd">
+                            <span id="MasterPage1_MainContent__ctlResultsFlatTrovix_rptResults__ctl1_lblCompany">Headforwards Solutions Ltd</span>
+                        </div>
+                    </div>
+
+                    <div class="mobileTableTdContent">
+                        <div class="mobileAltHeader">
+                            <span>Location</span>
+                        </div>
+                        <div class="mobileTd">
+                            <span id="MasterPage1_MainContent__ctlResultsFlatTrovix_rptResults__ctl1_lblArea">SW-Redruth</span>
+                            <span id="MasterPage1_MainContent__ctlResultsFlatTrovix_rptResults__ctl1_lblCity"></span>
+                        </div>
+                    </div>
+
+               </td>
+			</tr>
      """
     date = ""
     employer = ""
@@ -82,15 +139,18 @@ def readRow(r):
     joburl = ""
     jobtitle = ""
     for td in r.find_all('td'):
-        # print(td)
-        # print(td.contents)
+        #print(td)
+        #print(td.contents)
         if (td.contents[0] != '\n' or len(td.contents) >1):
             linklist = td.find_all("a")
             # print("linklist={l}".format(l=linklist))
             # there should be only one <a> in a <td>
             # which will either be empty or contain the job URL and title
+            # print(linklist)
             if len(linklist)>0:
-                i = linklist[0]
+                # take account of change of format of universal jobmatch
+                # the first <a> is empty
+                i = linklist[1]
                 # i.string is the job title
                 # get the URL by i.get('href')
                 if i.string is not None:
@@ -108,18 +168,30 @@ def readRow(r):
                         jobtitle = i.string
             # find the <span>s 
             spam = td.find_all("span")
-            # print("s={s}".format(s=s))
+            #print("s={s}".format(s=spam))
             for i in spam:
                 # these <span>s should be date
                 # employer (or advertiser)
                 # and location
                 # use the 'id' tag in the span to check which one we are in
-                if "Date" in i.get('id'):
-                    date = i.string
-                if "Company" in i.get('id'):
-                    employer = i.string
-                if "Area" in i.get('id'):
-                    location = i.string
+                # print(i)
+                # take account of change of format of universal jobmatch
+                # there are some <span>s without an id
+                try:
+                    if "lblDate" in i.get('id'):
+                        date = i.string
+                except:
+                    pass
+                try:
+                    if "lblCompany" in i.get('id'):
+                        employer = i.string
+                except:
+                    pass
+                try:
+                    if "lblArea" in i.get('id'):
+                        location = i.string
+                except:
+                    pass
                 # NB, the <span> with the "City" in the id is assumed to always be empty
 
         else:
@@ -136,7 +208,7 @@ def readTable(jobtable):
     """ read the table, do the headers separately, then the rest """
     tablerowlist = []
     tableheaders = jobtable.find_all('th')
-    # print(tableheaders)
+    #print(tableheaders)
     thlist = [] 
     for h in tableheaders:
         content = h.span.string
@@ -162,9 +234,9 @@ def readPage(page,q="*",t="*",loc="tr1",days=1,radiusM=20):
         jtitlequery = ""
     else:
         jtitlequery = "&tjt={t}".format(t=t)
-    urlUJ = "https://jobsearch.direct.gov.uk/JobSearch/PowerSearch.aspx?{jt}&tm={d}{kw}&where={w}&rad={rad}&sort=rv.dt.di&pp=25&rad_units=miles&pg={pg}".format(pg=str(page+1),w=str(loc),d=str(days),rad=str(radiusM),kw=kwordquery,jt=jtitlequery)    
+    urlUJ = "https://jobsearch.direct.gov.uk/jobsearch/PowerSearch.aspx?{jt}&tm={d}{kw}&where={w}&rad={rad}&sort=rv.dt.di&pp=25&rad_units=miles&pg={pg}".format(pg=str(page+1),w=str(loc),d=str(days),rad=str(radiusM),kw=kwordquery,jt=jtitlequery)    
     raw = urlopen(urlUJ).read()
-    soup = BeautifulSoup(raw)
+    soup = BeautifulSoup(raw,"lxml")
     # print(raw)
     # print(soup.prettify())
     # print(soup.head)
