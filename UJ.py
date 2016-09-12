@@ -174,21 +174,23 @@ def readRow(r):
                 # print(i)
                 # take account of change of format of universal jobmatch
                 # there are some <span>s without an id
+                # print(i.get('id'), i.string)
                 try:
+
                     if "lblDate" in i.get('id'):
                         date = i.string
                 except:
-                    date = ''
+                    pass
                 try:
                     if "lblCompany" in i.get('id'):
                         employer = i.string
                 except:
-                    employer = ''
+                    pass
                 try:
                     if "lblArea" in i.get('id'):
                         location = i.string
                 except:
-                    location = ''
+                    pass
                 # NB, the <span> with the "City" in the id is assumed to always be empty
 
         else:
@@ -197,6 +199,7 @@ def readRow(r):
             pass
     if joburl != "":
         """ if there is a URL for the advert, create a Job and return it """
+        # print(date,joburl,jobtitle,employer,location)
         return Job(date,joburl,jobtitle,employer,location)
     else:
         return None
