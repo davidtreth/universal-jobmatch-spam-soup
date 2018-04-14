@@ -3,9 +3,12 @@
 # 16-05-2016
 # making Universal Jobmatch easier to read
 # takes account of some changes in the HTML table from UJ -- May 2016
-
+import sys
 from bs4 import BeautifulSoup
-from urllib import urlopen
+if sys.version_info[0] < 3:
+	from urllib import urlopen
+else:
+	from urllib.request import urlopen
 # Import the python Argument parser
 import argparse
 import copy
@@ -50,6 +53,11 @@ class Job:
         """ print HTML version of table row """
         self.HTMLTableRow()
         print(self.htmlrow)
+        
+    def genHTMLTableRow(self):
+        """ return HTML version of table row """
+        self.HTMLTableRow()
+        return self.htmlrow
 
     
 def readRow(r):
@@ -251,6 +259,21 @@ def readPage(page,q="*",t="*",loc="tr1",days=1,radiusM=20):
         pagerowlist, nNewJobs = [], -1
     return pagerowlist, nNewJobs
     
+def genHTMLIntro():
+    """ generate opening HTML boilerplate """
+    HTMLIntro = ""
+    HTMLIntro += "<!DOCTYPE html>\n"
+    HTMLIntro += "<html>\n"
+    HTMLIntro += "<head>\n"
+    HTMLIntro += "<meta charset='UTF-8'>\n"
+    HTMLIntro += "<title>UJ</title>\n"
+    HTMLIntro += "<link href='UJ.css' rel='stylesheet' type='text/css' media='all'>\n"
+    HTMLIntro += "</head>\n"
+    HTMLIntro += "<body>\n"
+    HTMLIntro += "<table>\n"
+    # title row
+    HTMLIntro += "<tr class='titlerow'><th>Date</th><th>Job title</th><th>Advertiser</th><th>Location</th></tr>\n"
+    return HTMLIntro
 
 def printHTMLIntro():
     """ print opening HTML boilerplate """
@@ -265,7 +288,17 @@ def printHTMLIntro():
     print("<table>")
     # title row
     print("<tr class='titlerow'><th>Date</th><th>Job title</th><th>Advertiser</th><th>Location</th></tr>")
-
+    
+def genClosingRows(nJobs):
+    closingRows = ""
+    # number of jobs
+    if nJobs > 0:
+        closingRows += "<tr class='totalNjobs'><td></td><td>Total number of jobs found: {n}</td><td></td><td></td>\n".format(n=nJobs)
+    # closing tagline
+    closingRows += "<tr class='closingrow'><td></td><td>Created using <a href='https://bitbucket.org/davidtreth/universal-jobmatch-spam-soup'>Universal Jobmatch Spam Soup</a>.</td><td></td><td></td></tr>\n"
+    closingRows += genHTMLEnd()
+    return closingRows
+    
 def printClosingRows(mode,nJobs):
     if mode == "html":        
         # number of jobs
@@ -278,6 +311,14 @@ def printClosingRows(mode,nJobs):
         if nJobs > 0:
             print("\t\tTotal number of jobs found: {n}\t\t".format(n=nJobs))
         print("Created using Universal Jobmatch Spam Soup\thttps://bitbucket.org/davidtreth/universal-jobmatch-spam-soup")
+
+def genHTMLEnd():
+    """ generate closing HTML boilerplate """
+    endHTML = ""
+    endHTML += "</table>\n"
+    endHTML += "</body>\n"
+    endHTML += "</html>\n"    
+    return endHTML
 
 def printHTMLEnd():
     """ print closing HTML boilerplate """
@@ -324,8 +365,48 @@ def getFromUJ(q="*",t="*",loc="tr1",days=1,npages=20,radiusM=20,mode="html"):
                 job.printTableRow()
             else:
                 job.printHTMLTableRow()            
-    printClosingRows(mode,totalNjobs)
+    printClosingRows(mode, totalNjobs)
+    
+def genFilename(q="*",t="*",loc="tr1",days=1,radiusM=20):
+    """ generate a filename for output """
+    fname = "jobs_{l}_{rad}miles_".format(l=loc.replace(" ","_").replace("%20", "_"), rad=radiusM)
+    if q != "*":
+        fname += "query({qu})".format(qu=q.replace(" ","_"))
+    if t != "*":
+        fname += "jobtitle({ti})".format(ti=t.replace(" ","_"))
+    fname += "last{n}days.html".format(n=days)
+    print("writing to {fnm}".format(fnm=fname))
+    return fname
+    
+def getFromUJ2File(q,t,loc,days,npages,radiusM, fileout):
+    """ This function queries Universal Jobmatch and writes it to a file 
 
+    """
+    # counter variable for total number of jobs found
+    totalNjobs = 0    
+    if fileout == "":
+        fileout = genFilename(q,t,loc,days,radiusM)
+    outfile = file(fileout, "w")
+    outfile.write(genHTMLIntro())
+    # subtitle row
+    outfile.write("<tr class='subt'><th>Last {d} days</th><th>Query: job title = '{t}', keyword = '{q}'</th><th></th><th>up to {r} miles from {l}</th></tr>\n".format(d=days,t=t,q=q,r=radiusM,l=loc.replace("%20"," ")))
+    for page in range(npages):
+        # print("Page {p}".format(p=page))
+        pagerowlist, nNewJobs = readPage(page,q,t,loc,days,radiusM)
+        if nNewJobs == -1:
+            # if there are no jobs, print a message            
+            outfile.write("<tr class='deadparrot'><td></td><td>No jobs! The economic recovery is an ex-parrot! It has ceased to be!</td><td></td><td></td></tr>\n")
+            break
+        # add to counter variable to count total number
+        totalNjobs += nNewJobs
+        if nNewJobs == 0:
+            # if they are only duplicates, stop
+            break
+        for job in pagerowlist:
+            outfile.write(job.genHTMLTableRow())
+    outfile.write(genClosingRows(totalNjobs))
+    outfile.close()
+        
 if __name__ == '__main__':
     """ Create the command line options with ArgumentParser. """
     parser = argparse.ArgumentParser()
@@ -350,7 +431,15 @@ if __name__ == '__main__':
     parser.add_argument("-m", "--mode", type=str,
                         help="Specify mode - text seperated by tab or HTML (default is HTML).",
                         default="html")
+    parser.add_argument("-a", "--autofileout", action="store_true",
+                        help="Automatic file output (HTML). If set, automatically write to file, otherwise to console.")
+    parser.add_argument("-o", "--outfile", type=str,
+                        help="Specify output filename (by default will autogenerate from parameters).",
+                        default = "")
     # Call the parser to parse the arguments.
     args = parser.parse_args()
     args.postcode = args.postcode.replace(" ","%20")
-    getFromUJ(q=args.query,t=args.jobtitle,loc=args.postcode,days=args.days,npages=args.npages,radiusM=args.radius,mode=args.mode)
+    if args.autofileout:
+        getFromUJ2File(q=args.query,t=args.jobtitle,loc=args.postcode,days=args.days,npages=args.npages,radiusM=args.radius, fileout=args.outfile)
+    else:
+        getFromUJ(q=args.query,t=args.jobtitle,loc=args.postcode,days=args.days,npages=args.npages,radiusM=args.radius,mode=args.mode)
