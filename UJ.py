@@ -12,6 +12,7 @@ else:
 # Import the python Argument parser
 import argparse
 import copy
+import time
 
 # urllist is to keep track of the job URLs to stop once duplicates are encountered
 urllist = []
@@ -47,8 +48,11 @@ class Job:
         """ create HTML version of table row """
         self.jobLink()
         trow = "<tr>" + "<td>"+self.date + "</td><td>" + self.jobLink + "</td><td>" + self.employer + "</td><td>" + self.location+"</td>"+"</tr>"        
-        self.htmlrow = trow.encode("utf-8")
-
+        if sys.version_info[0] < 3:
+           self.htmlrow = trow.encode("utf-8")
+        else:
+           self.htmlrow = trow
+        
     def printHTMLTableRow(self):
         """ print HTML version of table row """
         self.HTMLTableRow()
@@ -57,7 +61,8 @@ class Job:
     def genHTMLTableRow(self):
         """ return HTML version of table row """
         self.HTMLTableRow()
-        return self.htmlrow
+        print(str(self.htmlrow))
+        return str(self.htmlrow)
 
     
 def readRow(r):
@@ -369,7 +374,10 @@ def getFromUJ(q="*",t="*",loc="tr1",days=1,npages=20,radiusM=20,mode="html"):
     
 def genFilename(q="*",t="*",loc="tr1",days=1,radiusM=20):
     """ generate a filename for output """
-    fname = "jobs_{l}_{rad}miles_".format(l=loc.replace(" ","_").replace("%20", "_"), rad=radiusM)
+    ltime = time.localtime()
+    dtstr = "{y}{m:02d}{d:02d}".format(y=ltime.tm_year, m=ltime.tm_mon, d=ltime.tm_mday)
+    fname = "jobs_{d}_{l}_{rad}miles_".format(d=dtstr,
+            l=loc.replace(" ","_").replace("%20", "_"), rad=radiusM)
     if q != "*":
         fname += "query({qu})".format(qu=q.replace(" ","_"))
     if t != "*":
@@ -386,7 +394,7 @@ def getFromUJ2File(q,t,loc,days,npages,radiusM, fileout):
     totalNjobs = 0    
     if fileout == "":
         fileout = genFilename(q,t,loc,days,radiusM)
-    outfile = file(fileout, "w")
+    outfile = open(fileout, "w")
     outfile.write(genHTMLIntro())
     # subtitle row
     outfile.write("<tr class='subt'><th>Last {d} days</th><th>Query: job title = '{t}', keyword = '{q}'</th><th></th><th>up to {r} miles from {l}</th></tr>\n".format(d=days,t=t,q=q,r=radiusM,l=loc.replace("%20"," ")))
